@@ -1,35 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { getStatus } from "./lib/api";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [requestId, setRequestId] = useState("demo-121");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  async function onFetch() {
+    setLoading(true);
+    setErr(null);
+    setData(null);
+    try {
+      const out = await getStatus(requestId.trim());
+      setData(out);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div style={{ maxWidth: 900, margin: "40px auto", fontFamily: "system-ui" }}>
+      <h1>Jarvis Panel (MVP)</h1>
 
-export default App
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <label>
+          requestId:{" "}
+          <input
+            value={requestId}
+            onChange={(e) => setRequestId(e.target.value)}
+            style={{ padding: 8, width: 240 }}
+          />
+        </label>
+
+        <button onClick={onFetch} disabled={loading} style={{ padding: "8px 14px" }}>
+          {loading ? "Loading…" : "Get status"}
+        </button>
+      </div>
+
+      {err && (
+        <pre style={{ marginTop: 16, padding: 12, background: "#2a1a1a", color: "#ffb3b3" }}>
+          {err}
+        </pre>
+      )}
+
+      {data && (
+        <pre style={{ marginTop: 16, padding: 12, background: "#111", color: "#ddd", overflow: "auto" }}>
+          {JSON.stringify(data, null, 2)}
+        </pre>
+      )}
+
+      <p style={{ marginTop: 16, opacity: 0.7 }}>
+        Next: render approvals + runEvents timeline.
+      </p>
+    </div>
+  );
+}
